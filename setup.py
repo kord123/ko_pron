@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ko_pron",
-    version="0.9",
+    version="1.0",
     author="Andriy Koretskyy",
     author_email="kord123@gmail.com",
     description="Korean pronunciation and romanisation based on Wiktionary ko-pron lua module",
@@ -15,7 +15,7 @@ setuptools.setup(
     license='MIT',
     keywords='hangul korean pronunciation romanisation romanization IPA Yale McCune-Reischauer WT-revised revised',
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python",
         "Operating System :: OS Independent",
     ],
 )
