@@ -70,8 +70,7 @@ def romanise(text_param,
              bcred: int = None,
              svar: int = None,
              iot: int = None,
-             yeored: int = None
-             ):
+             yeored: int = None):
     # system_index - One of these values:
     # "ph" - phonetic hangul
     # "rr" - Revised Romanisation
@@ -81,7 +80,7 @@ def romanise(text_param,
     # "ipa" - IPA
 
     system_index = system_lookup.index(system_index)
-    text_param = re.sub('["-%](.)', "$1", text_param)
+    text_param = re.sub('["-%](.)', "\\1", text_param)
     for the_original in re.finditer("[ᄀ-ᄒ" + "ᅡ-ᅵ" + "ᆨ-ᇂ" + "ㄱ-ㆎ가-힣' ]+", text_param):
         primitive_word = the_original.string
         primitive_word = re.sub("'''", "ß", primitive_word)
@@ -99,31 +98,33 @@ def romanise(text_param,
                 has_vowel[jungseong] = True
         word_set = [primitive_word]
 
-        def add_respelling(variable, modification, modification2=lambda x: x):
-            if variable and re.search("[05]", str(system_index)):
-                pre_length = len(word_set)
-                for i, item in enumerate(word_set):
-                    item = item[:variable] + modification(item[variable]) + \
-                           modification2(item[variable + 1]) + item[variable + 2:]
-                    word_set[pre_length + i] = "".join(item)
+        if system_index in {0, 5}:
+            def add_respelling(variable, modification, modification2=lambda x: x):
+                if variable is not None:
+                    new_word_set = []
+                    for i, item in enumerate(word_set):
+                        item = item[:variable] + modification(item[variable]) + \
+                               modification2(item[variable + 1: variable + 2]) + item[variable + 2:]
+                        new_word_set.append("".join(item))
+                    word_set.extend(new_word_set)
 
-        add_respelling(ui, lambda x: "이")
-        add_respelling(ui_e, lambda x: "에")
+            add_respelling(ui, lambda x: "이")
+            add_respelling(ui_e, lambda x: "에")
 
-        add_respelling(nobc, lambda x: chr(ord(x) - (ord(x) - 0xAC00) % 28), lambda x: chr(ord(x) + 588))
+            add_respelling(nobc, lambda x: chr(ord(x) - (ord(x) - 0xAC00) % 28), lambda x: chr(ord(x) + 588))
 
-        add_respelling(svar, lambda x: chr(ord(x) - 12))
-        add_respelling(iot, lambda x: chr(ord(x) + 56))
-        add_respelling(yeored, lambda x: chr(ord(x) - 56))
+            add_respelling(svar, lambda x: chr(ord(x) - 12))
+            add_respelling(iot, lambda x: chr(ord(x) + 56))
+            add_respelling(yeored, lambda x: chr(ord(x) - 56))
 
         for vowel_id in {7, 11, 16}:
             if has_vowel.get(vowel_id) and "{}-{}".format(vowel_id, system_index) in allowed_vowel_scheme:
                 pre_length = len(word_set)
                 for i in range(0, pre_length):
-                    item = word_set[i].split("")
+                    item = word_set[i]
                     for num, it in enumerate(item):
                         if floor(((ord(it) - 0xAC00) % 588) / 28) == vowel_id:
-                            item[num] = chr(ord(it) + vowel_variation[vowel_id])
+                            item = item[:num] + chr(ord(it) + vowel_variation[vowel_id]) + item[num + 1:]
                     if vowel_id == 11:
                         word_set.insert(i, "".join(item))
                     else:
@@ -148,7 +149,7 @@ def romanise(text_param,
                 if system_index == 4 and syllable['vowel'] == "ᅮ" and match(syllable['initial'], "[ᄆᄇᄈᄑ]"):
                     syllable['vowel'] = "ᅳ"
 
-                if match(str(system_index), "[05]"):
+                if system_index in {0, 5}:
                     if syllable['vowel'] == "ᅴ" and this_syllable != "의":
                         syllable['vowel'] = "ᅵ"
                     if this_syllable == "넓":
@@ -162,19 +163,21 @@ def romanise(text_param,
 
                 if index + 1 in nn:
                     next_syllable['initial'] = "ᄂ"
-                if index in com and match(str(system_index), "[05]"):
-                    next_syllable['initial'] = com_ph[next_syllable['initial']] or next_syllable['initial']
+                if index in com and system_index in {0, 5}:
+                    next_initial = next_syllable['initial']
+                    next_syllable['initial'] = com_ph[next_initial] if next_initial in com_ph else next_initial
 
                 if index + 1 in ni and system_index != 2:
                     next_syllable['initial'] = (system_index == 4 and syllable['final'] == "ᆯ") and "ᄅ" or "ᄂ"
 
-                if match(str(system_index), "[^24]"):
+                if system_index not in {2, 4}:
                     if bcred == index:
-                        syllable['final'] = boundary[syllable['final'] + "-Ø"][1]
+                        syllable['final'] = boundary[syllable['final'] + "-Ø"][0]
+
                     if index != -1 and this_syllable == "밟":
                         syllable['final'] = "ᆸ"
 
-                    final_next_syllable = syllable['final'] + sub(respelling, index + 1, index + 1)
+                    final_next_syllable = syllable['final'] + respelling[index + 1: index + 2]
                     if match(final_next_syllable, "[ᇀᆴ][이히]"):
                         syllable['final'] = "ᆾ"
 
@@ -185,7 +188,7 @@ def romanise(text_param,
                         syllable['final'] = "ᆾ"
 
                     elif syllable['final'] + next_syllable['initial'] == "ᆺᄋ" \
-                            and not match(sub(respelling, index + 1, index + 1), "[이아어은으음읍을었았에입]"):
+                            and not match(respelling[index + 1:index + 2], "[이아어은으음읍을었았에입]"):
                         syllable['final'] = "ᆮ"
 
                 bound = "{}-{}".format(syllable['final'], next_syllable['initial'])
@@ -207,11 +210,14 @@ def romanise(text_param,
 
                 if index in l:
                     if system_index == 0:
-                        junction = gsub(junction, "^(.)(.?)$",
-                                        lambda a, b: match(a, "[ᆨ-ᇂ]") and a + ":" + b or ":" + a + b)
+                        def substitute(matched):
+                            a, b = matched.group(1), matched.group(2)
+                            return match(a, "[ᆨ-ᇂ]") and a + ":" + b or ":" + a + b
+
+                        junction = gsub(junction, "^(.)(.?)$", substitute)
 
                     elif system_index == 4:
-                        vowel = gsub(vowel, "([aeiou])", "%1̄")
+                        vowel = gsub(vowel, "([aeiou])", "\\1̄")
 
                     elif system_index == 5:
                         vowel = vowel + "ː"
@@ -221,28 +227,34 @@ def romanise(text_param,
 
                 if index in com:
                     def substitute(next_letter):
-                        return (system_index == 4 and "q" or "") + (system_index == 3
-                                                                    and (com_mc[next_letter + (cap and 1 or "")] or
-                                                                         com_mc[next_letter]
-                                                                         or next_letter) or next_letter)
+                        letter_val = next_letter.group()
+                        return (system_index == 4 and "q" or "") \
+                               + (system_index == 3
+                                  and (com_mc.get(letter_val + (cap and 1 or "")) or
+                                       com_mc.get(letter_val)
+                                       or letter_val) or letter_val)
 
                     junction = gsub(junction, "(.)$", substitute)
 
                 if index + 1 in ni and system_index == 4:
-                    junction = gsub(junction, "([nl])$", "<sup>$1</sup>")
+                    junction = gsub(junction, "n$", "ⁿ")
+                    junction = gsub(junction, "l$", "ˡ")
 
                 romanisation.append(vowel + junction)
 
             temp_romanisation = "".join(romanisation)
-            if cap and match(str(system_index), "[^05]"):
-                temp_romanisation = (sub(temp_romanisation, 0, 0)) + sub(temp_romanisation, 1, -2).upper()
+            if cap and system_index not in {0, 5}:
+                temp_romanisation = temp_romanisation[0].upper() + temp_romanisation[1:]
 
             if system_index == 0:
                 temp_romanisation = tidy_phonetic(primitive_word, unicodedata.normalize('NFC', temp_romanisation))
-            elif match(str(system_index), "[12]"):
+            elif system_index in {1, 2}:
                 for i in range(0, 2):
-                    temp_romanisation = gsub(temp_romanisation, "(.)…(.)",
-                                             lambda a, b: a + (ambiguous_intersyllabic_rr[a + b] and "-" or "") + b)
+                    def substitute(matched):
+                        a, b = matched.group(1), matched.group(2)
+                        return a + (ambiguous_intersyllabic_rr.get(a + b) and "-" or "") + b
+
+                    temp_romanisation = gsub(temp_romanisation, "(.)…(.)", substitute)
             elif system_index == 3:
                 temp_romanisation = gsub(temp_romanisation, "swi", "shwi")
             word_set_romanisations.append(temp_romanisation)
@@ -253,6 +265,8 @@ def romanise(text_param,
             system_list[system_index]['separator'].join(word_set_romanisations),
             1
         )
+        if system_index == 5:
+            text_param = tidy_ipa(text_param)
     return text_param
 
 
@@ -277,13 +291,11 @@ def tidy_phonetic(original: str, romanised: str):
     return "".join(w)
 
 
-def tidy_ipa(set):
-    ipa = system_list[6]['separator'].join(set)
-
+def tidy_ipa(ipa: str):
     ipa = re.sub("ʌ̹ː", "ɘː", ipa)
-    ipa = re.sub("ɭɭ([ji])", "ɭʎ$1", ipa)
-    ipa = re.sub("s([͈]?)ʰɥi", "ʃ$1ʰɥi", ipa)
-    ipa = re.sub("s([ʰ͈])([ji])", "ɕ$1$2", ipa)
+    ipa = re.sub("ɭɭ([ji])", "ɭʎ\\1", ipa)
+    ipa = re.sub("s([͈]?)ʰɥi", "ʃ\\1ʰɥi", ipa)
+    ipa = re.sub("s([ʰ͈])([ji])", "ɕ\\1\\2", ipa)
     ipa = re.sub("nj", "ɲj", ipa)
 
     for key, value in {
@@ -321,10 +333,6 @@ def gsub(string, pattern, replacement, count=0):
 
 def match(string, regex):
     return re.search(regex, string)
-
-
-def sub(string, start_inclusive, end_inclusive):
-    return string[start_inclusive: end_inclusive + 1]
 
 
 def decompose_jamo(syllable):
