@@ -27,8 +27,8 @@ Result: `itta`
 ## Test coverage
 
 Name | Stmts | Miss | Cover
--------------------------------------------------
-ko_pron/ko_pron/__init__.py | 2 | 0 | 100%
+---- | ----- | ---- | -----
+ko_pron/ko_pron/\_\_init__.py | 2 | 0 | 100%
 ko_pron/ko_pron/data.py | 2 | 0 | 100%
 ko_pron/ko_pron/ko_pron.py | 202 | 33 | 84%
 TOTAL | 206 | 33 | 84%
