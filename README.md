@@ -34,6 +34,9 @@ ko_pron/ko_pron/ko_pron.py | 202 | 33 | 84%
 TOTAL | 206 | 33 | 84%
 
 ## Links
-Original lua module: [ko-pron](https://en.wiktionary.org/wiki/Module:ko-pron)
 
-Optional parameters: [Parameters](https://en.wiktionary.org/wiki/Template:ko-IPA#Parameters)
+[GitHub](https://github.com/kord123/ko_pron)
+
+[Original lua module](https://en.wiktionary.org/wiki/Module:ko-pron)
+
+[Optional parameters](https://en.wiktionary.org/wiki/Template:ko-IPA#Parameters)
