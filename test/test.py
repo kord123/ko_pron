@@ -1,8 +1,6 @@
-import json
-import re
 from unittest import TestCase, main
+
 from ko_pron import romanise
-from ko_pron.ko_pron import system_lookup
 
 
 class TestKoPron(TestCase):
