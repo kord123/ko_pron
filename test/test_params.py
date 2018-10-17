@@ -144,12 +144,12 @@ class TestKoPron(TestCase):
 
     def test_svar(self):
         for system, expected in {
-            "ph": "머딛따/머딛따",
-            "rr": "meoditda",
+            "ph": "머싣따/머딛따",
+            "rr": "meositda",
             "rrr": "meos-issda",
-            "mr": "mŏditta",
+            "mr": "mŏsitta",
             "yr": "mes.issqta",
-            "ipa": "mʌ̹dit̚t͈a̠] ~ [mʌ̹dit̚t͈a̠"
+            "ipa": "mʌ̹ɕʰit̚t͈a̠] ~ [mʌ̹dit̚t͈a̠"
         }.items():
             result = romanise("멋있다", system, svar=0)
 

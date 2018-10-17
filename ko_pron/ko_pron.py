@@ -83,13 +83,6 @@ def romanise(text_param,
     text_param = re.sub('["-%](.)', "\\1", text_param)
     for the_original in re.finditer("[ᄀ-ᄒ" + "ᅡ-ᅵ" + "ᆨ-ᇂ" + "ㄱ-ㆎ가-힣' ]+", text_param):
         primitive_word = the_original.string
-        primitive_word = re.sub("'''", "ß", primitive_word)
-
-        bold_position, bold_count = [], 0
-        while re.search("ß", primitive_word):
-            bold_position[primitive_word.find("ß") + bold_count] = True
-            primitive_word = re.sub("ß", "", primitive_word, count=1)
-            bold_count = bold_count + 1
 
         has_vowel = {}
         for ch in primitive_word:
@@ -187,26 +180,11 @@ def romanise(text_param,
                     elif match(final_next_syllable, "ᆮ히"):
                         syllable['final'] = "ᆾ"
 
-                    elif syllable['final'] + next_syllable['initial'] == "ᆺᄋ" \
-                            and not match(respelling[index + 1:index + 2], "[이아어은으음읍을었았에입]"):
-                        syllable['final'] = "ᆮ"
-
                 bound = "{}-{}".format(syllable['final'], next_syllable['initial'])
                 if bound not in boundary:
                     raise ValueError("No boundary data for " + bound + ".")
 
                 junction = boundary[bound][system_index]
-
-                if (index + bold_insert_count + 1) in bold_position and system_index == 1:
-                    def substitute(matched):
-                        a, b = match(matched, "^(ng%-?)(.?)$")
-                        if not a or not b:
-                            a, b = match(matched, "^(.?%-?)(.*)$")
-                        return match(syllable['final'] + next_syllable['initial'], "^Ø?[ᄀ-ᄒ]$") \
-                               and "'''" + (a or "") + (b or "") or (a or "") + "'''" + (b or "")
-
-                    junction = gsub(junction, "^.*$", substitute)
-                    bold_insert_count = bold_insert_count + 1
 
                 if index in l:
                     if system_index == 0:
